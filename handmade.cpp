@@ -10,7 +10,7 @@
 
 
 
-#define NUM_THREADS 8
+#define NUM_THREADS 40
 #define ARRAY_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 struct work_queue_entry
@@ -46,7 +46,7 @@ void* thread_function(void* arg) {
     thread_info *ThreadInfo = (thread_info *)arg;
     for(;;)
     {   
-        int32_t  OriginalNextEntry = NextEntryToDo;
+        int32_t OriginalNextEntry = NextEntryToDo;
         if(OriginalNextEntry < EntryCount)
         {   
             // Before was just a increment.. that means that two thread can enter and make NextEntryTo > EntryCount
@@ -66,6 +66,18 @@ void* thread_function(void* arg) {
     }
     return NULL;
 }
+
+void* thread_function1(void* arg) {
+
+    thread_info *ThreadInfo = (thread_info *)arg;
+    for(;;)
+    {   
+        printf("Entr: %d\n", NextEntryToDo);
+
+    }
+    return NULL;
+}
+
 int main(){
     pthread_t threads[NUM_THREADS];
     thread_info ThreadInfo[NUM_THREADS];
@@ -76,21 +88,27 @@ int main(){
         thread_info *Info = ThreadInfo + ThreadIndex;
         Info->SemaphoreHandle = semaphore;
         Info->LogicalThreadIndex = ThreadIndex;
-        if (pthread_create(&threads[ThreadIndex], NULL, thread_function, Info) != 0)
+        if (pthread_create(&threads[ThreadIndex], NULL, thread_function1, Info) != 0)
         {
             perror("pthread_create");
             return 1;
         }
     }
-    PushString(semaphore,"String 0 ");
-    PushString(semaphore,"String 1 ");
-    PushString(semaphore,"String 2 ");
-    PushString(semaphore,"String 3 ");
-    PushString(semaphore,"String 4 ");
-    PushString(semaphore,"String 5 ");
-    PushString(semaphore,"String 6 ");
-    PushString(semaphore,"String 7 ");
-    PushString(semaphore,"String 8 ");
+
+    while (NextEntryToDo < 10000) 
+    {
+        // usleep(10000);
+        __sync_add_and_fetch(&NextEntryToDo,1);
+    }
+    // PushString(semaphore,"String 0 ");
+    // PushString(semaphore,"String 1 ");
+    // PushString(semaphore,"String 2 ");
+    // PushString(semaphore,"String 3 ");
+    // PushString(semaphore,"String 4 ");
+    // PushString(semaphore,"String 5 ");
+    // PushString(semaphore,"String 6 ");
+    // PushString(semaphore,"String 7 ");
+    // PushString(semaphore,"String 8 ");
 
     usleep(1000000);
 
